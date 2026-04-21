@@ -30,4 +30,4 @@ jobs:
           test -f extensions/kimi-usage.ts
 
       - name: Verify extension imports
-        run: npx tsx --eval "await import('./extensions/kimi-usage.ts'); console.log('IMPORT_OK')"
+        run: npx tsx --eval "(async () => { await import('./extensions/kimi-usage.ts'); console.log('IMPORT_OK'); })()"
