@@ -1,0 +1,23 @@
+{
+  "name": "pi-kimi-usage",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Shows Kimi usage in the pi status bar when a Kimi model is selected",
+  "keywords": ["pi-package", "pi", "extension", "kimi", "statusbar"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/muffe/pi-kimi-usage.git"
+  },
+  "homepage": "https://github.com/muffe/pi-kimi-usage#readme",
+  "bugs": {
+    "url": "https://github.com/muffe/pi-kimi-usage/issues"
+  },
+  "pi": {
+    "extensions": ["./extensions"],
+    "image": "./assets/preview.svg"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  }
+}
