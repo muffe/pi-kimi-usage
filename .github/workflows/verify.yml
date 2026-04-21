@@ -28,6 +28,10 @@ jobs:
           test -f README.md
           test -f LICENSE
           test -f extensions/kimi-usage.ts
+          test -f scripts/verify-runtime.mjs
 
       - name: Verify extension imports
         run: npx tsx --eval "(async () => { await import('./extensions/kimi-usage.ts'); console.log('IMPORT_OK'); })()"
+
+      - name: Verify pi runtime loads extension
+        run: node scripts/verify-runtime.mjs
