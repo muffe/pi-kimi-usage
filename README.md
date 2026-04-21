@@ -25,10 +25,10 @@ Kimi · 7d 6% 6d20h · 5h 28% 1h40m
      - shell command prefixed with `!`
 - Uses `KIMI_CODE_BASE_URL` if set, otherwise defaults to `https://api.kimi.com/coding/v1/usages`
 
-## Install locally
+## Install
 
 ```bash
-pi install /opt/pi-kimi-usage
+pi install git:github.com/muffe/pi-kimi-usage
 ```
 
 ## Notes
