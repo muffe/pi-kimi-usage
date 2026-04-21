@@ -5,6 +5,12 @@
   "description": "Shows Kimi usage in the pi status bar when a Kimi model is selected",
   "keywords": ["pi-package", "pi", "extension", "kimi", "statusbar"],
   "license": "MIT",
+  "files": [
+    "extensions",
+    "assets/preview.svg",
+    "README.md",
+    "LICENSE"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/muffe/pi-kimi-usage.git"
