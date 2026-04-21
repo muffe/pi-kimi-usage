@@ -1,6 +1,6 @@
 {
   "name": "pi-kimi-usage",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Shows Kimi usage in the pi status bar when a Kimi model is selected",
   "keywords": ["pi-package", "pi", "extension", "kimi", "statusbar"],
@@ -21,7 +21,7 @@
   },
   "pi": {
     "extensions": ["./extensions"],
-    "image": "./assets/preview.svg"
+    "image": "https://raw.githubusercontent.com/muffe/pi-kimi-usage/main/assets/preview.svg"
   },
   "peerDependencies": {
     "@mariozechner/pi-coding-agent": "*"

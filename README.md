@@ -1,6 +1,7 @@
 # pi-kimi-usage
 
 [![npm version](https://img.shields.io/npm/v/pi-kimi-usage)](https://www.npmjs.com/package/pi-kimi-usage)
+[![GitHub release](https://img.shields.io/github/v/release/muffe/pi-kimi-usage)](https://github.com/muffe/pi-kimi-usage/releases)
 [![pi package](https://img.shields.io/badge/pi-package-7c3aed)](https://shittycodingagent.ai/packages)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
