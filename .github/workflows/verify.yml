@@ -1,0 +1,33 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install verify dependencies
+        run: npm install --no-save tsx @mariozechner/pi-coding-agent
+
+      - name: Verify package metadata
+        run: |
+          test -f package.json
+          test -f README.md
+          test -f LICENSE
+          test -f extensions/kimi-usage.ts
+
+      - name: Verify extension imports
+        run: npx tsx --eval "await import('./extensions/kimi-usage.ts'); console.log('IMPORT_OK')"
