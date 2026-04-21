@@ -1,5 +1,6 @@
 # pi-kimi-usage
 
+[![npm version](https://img.shields.io/npm/v/pi-kimi-usage)](https://www.npmjs.com/package/pi-kimi-usage)
 [![pi package](https://img.shields.io/badge/pi-package-7c3aed)](https://shittycodingagent.ai/packages)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
@@ -27,9 +28,20 @@ Kimi · 7d 6% 6d20h · 5h 28% 1h40m
 
 ## Install
 
+From npm:
+
+```bash
+pi install npm:pi-kimi-usage
+```
+
+From GitHub:
+
 ```bash
 pi install git:github.com/muffe/pi-kimi-usage
 ```
+
+npm package:
+- https://www.npmjs.com/package/pi-kimi-usage
 
 ## Notes
 
