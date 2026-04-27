@@ -1,6 +1,6 @@
 {
   "name": "pi-kimi-usage",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "Shows Kimi usage in the pi status bar when a Kimi model is selected",
   "keywords": ["pi-package", "pi", "extension", "kimi", "statusbar"],

@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI, ThemeColor } from "@mariozechner/pi-coding-agent";
 
 /**
  * Kimi usage status extension.
@@ -29,12 +29,12 @@ const GLOBAL_TIMER_KEY = "__pi_kimi_usage_timer__";
 
 type AuthEntry = { type?: string; key?: string };
 type AuthFile = Record<string, AuthEntry>;
-type ThemeLike = { fg: (role: string, text: string) => string };
+type ThemeLike = { fg: (role: ThemeColor, text: string) => string };
 type UiLike = {
   theme: ThemeLike;
   setStatus: (key: string, value: string | undefined) => void;
   setWidget: (key: string, value: string[] | undefined) => void;
-  notify: (message: string, kind?: string) => void;
+  notify: (message: string, kind?: "info" | "warning" | "error") => void;
 };
 type CtxLike = {
   hasUI?: boolean;
@@ -121,6 +121,12 @@ function pct(used?: number, limit?: number): number | undefined {
   return Math.max(0, Math.min(100, Math.round((used / limit) * 100)));
 }
 
+function usagePct(limit?: number, used?: number, remaining?: number): number | undefined {
+  if (used !== undefined) return pct(used, limit);
+  if (limit === undefined || remaining === undefined) return undefined;
+  return pct(limit - remaining, limit);
+}
+
 function formatReset(reset?: string): string | undefined {
   if (!reset) return undefined;
   const at = Date.parse(reset);
@@ -176,7 +182,9 @@ async function fetchUsage(key: string): Promise<UsageResponse> {
 export default function kimiUsageExtension(pi: ExtensionAPI) {
   let timer: NodeJS.Timeout | undefined;
   let activeProvider: string | undefined;
-  let inFlight: Promise<void> | undefined;
+  let runtimeActive = false;
+  let runtimeGeneration = 0;
+  let inFlight: { generation: number; promise: Promise<void> } | undefined;
 
   const clearTimer = () => {
     const globalTimer = (globalThis as Record<string, unknown>)[GLOBAL_TIMER_KEY] as NodeJS.Timeout | undefined;
@@ -197,9 +205,13 @@ export default function kimiUsageExtension(pi: ExtensionAPI) {
     return provider === "kimi-coding";
   };
 
-  const render = async (ctx: CtxLike) => {
-    if (inFlight) return inFlight;
-    inFlight = (async () => {
+  const render = async (ctx: CtxLike, generation = runtimeGeneration) => {
+    if (!runtimeActive || generation !== runtimeGeneration) return;
+    if (inFlight?.generation === generation) return inFlight.promise;
+
+    const isCurrent = () => runtimeActive && generation === runtimeGeneration;
+    const promise = (async () => {
+      if (!isCurrent()) return;
       if (!isKimiSelected(ctx)) {
         clearUi(ctx);
         return;
@@ -214,18 +226,20 @@ export default function kimiUsageExtension(pi: ExtensionAPI) {
 
       try {
         const data = await fetchUsage(key);
-        if (!ctx.hasUI) return;
+        if (!isCurrent() || !isKimiSelected(ctx) || !ctx.hasUI) return;
 
         const theme = ctx.ui.theme;
         const weeklyLimit = toNum(data.usage?.limit);
         const weeklyUsed = toNum(data.usage?.used);
-        const weeklyUsedPct = pct(weeklyUsed, weeklyLimit);
+        const weeklyRemaining = toNum(data.usage?.remaining);
+        const weeklyUsedPct = usagePct(weeklyLimit, weeklyUsed, weeklyRemaining);
         const weeklyReset = formatReset(data.usage?.resetTime || data.usage?.reset_at);
 
         const rate = data.limits?.[0];
         const rateLimit = toNum(rate?.detail?.limit);
         const rateUsed = toNum(rate?.detail?.used);
-        const rateUsedPct = pct(rateUsed, rateLimit);
+        const rateRemaining = toNum(rate?.detail?.remaining);
+        const rateUsedPct = usagePct(rateLimit, rateUsed, rateRemaining);
         const rateReset = formatReset(rate?.detail?.resetTime || rate?.detail?.reset_at);
         const rateWindow = durationLabel(rate?.window?.duration, rate?.window?.timeUnit);
 
@@ -237,27 +251,34 @@ export default function kimiUsageExtension(pi: ExtensionAPI) {
           weeklyColor(`7d ${weeklyUsedPct ?? "?"}%${weeklyReset ? ` ${weeklyReset}` : ""}`),
           rateColor(`${rateWindow} ${rateUsedPct ?? "?"}%${rateReset ? ` ${rateReset}` : ""}`),
         ];
+        if (!isCurrent() || !isKimiSelected(ctx)) return;
         ctx.ui.setStatus(EXT_ID, statusParts.join(theme.fg("dim", " · ")));
       } catch (_error) {
-        if (!ctx.hasUI) return;
+        if (!isCurrent() || !isKimiSelected(ctx) || !ctx.hasUI) return;
         ctx.ui.setStatus(EXT_ID, ctx.ui.theme.fg("warning", "Kimi: usage unavailable"));
       }
     })();
 
+    inFlight = { generation, promise };
     try {
-      await inFlight;
+      await promise;
     } finally {
-      inFlight = undefined;
+      if (inFlight?.promise === promise) inFlight = undefined;
     }
   };
 
   pi.on("session_start", async (_event, ctx) => {
+    runtimeActive = true;
+    runtimeGeneration += 1;
+    inFlight = undefined;
     activeProvider = ctx.model?.provider;
     clearTimer();
     clearUi(ctx);
-    await render(ctx);
+    const generation = runtimeGeneration;
+    await render(ctx, generation);
     timer = setInterval(() => {
-      void render(ctx);
+      if (!runtimeActive || generation !== runtimeGeneration || activeProvider !== "kimi-coding") return;
+      void render(ctx, generation);
     }, REFRESH_MS);
     (globalThis as Record<string, unknown>)[GLOBAL_TIMER_KEY] = timer;
   });
@@ -272,7 +293,10 @@ export default function kimiUsageExtension(pi: ExtensionAPI) {
     await render(ctx);
   });
 
-  pi.on("session_end", async (_event, ctx) => {
+  pi.on("session_shutdown", async (_event, ctx) => {
+    runtimeActive = false;
+    runtimeGeneration += 1;
+    inFlight = undefined;
     clearTimer();
     clearUi(ctx);
   });
